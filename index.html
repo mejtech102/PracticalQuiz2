@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Solar System Explorer</title>
+    <script src="script/aframe.min.js"></script>
+
+    <!-- Custom rotation component for orbital and planetary motion -->
+    <script>
+        AFRAME.registerComponent('rotator', {
+            schema: {
+                speed: { type: 'number', default: 0 },
+                axis: { type: 'string', default: 'y' }
+            },
+            tick: function (time, timeDelta) {
+                if (!this.data.speed) return;
+                const elapsed = timeDelta / 1000;
+                const rotation = (this.data.speed * elapsed * Math.PI) / 180; // Convert to radians
+                
+                // Update rotation directly on object3D for better performance
+                if (this.data.axis === 'x') this.el.object3D.rotation.x += rotation;
+                else if (this.data.axis === 'z') this.el.object3D.rotation.z += rotation;
+                else this.el.object3D.rotation.y += rotation;
+            }
+        });
+    </script>
+</head>
+<body>
+    <a-scene>
+        <!-- Ambient lighting for the scene -->
+        <a-light type="ambient" color="#BBB"></a-light>
+
+        <!-- Camera with controls for navigation -->
+        <a-entity 
+            position="0 5 25" 
+            camera 
+            look-controls 
+            wasd-controls="acceleration: 100">
+            <a-cursor raycaster="objects: .raycastable"></a-cursor>
+        </a-entity>
+
+        <!-- Background star field -->
+        <a-sphere 
+            src="texture/2k_stars.jpg" 
+            radius="100" 
+            position="0 0 0" 
+            rotation="0 90 0" 
+            side="back" 
+            class="raycastable">
+        </a-sphere>
+
+        <!-- Milky Way backdrop -->
+        <a-sphere 
+            src="texture/milky_way_texture.jpg" 
+            radius="120"  
+            position="0 0 0"  
+            rotation="0 180 0"  
+            side="back">
+        </a-sphere>
+
+        <!-- Teleport marker for quick navigation -->
+        <a-entity 
+            id="teleport-marker" 
+            visible="false" 
+            animation="property: scale; to: 1.2 1 1.2; dir: alternate; dur: 700; loop: true; easing: ease-in-out">
+            <a-cylinder color="#00BCD4" height="0.1" radius="1" material="opacity: 0.5"></a-cylinder>
+        </a-entity>
+
+        <!-- Solar system container -->
+        <a-entity id="solar-system">
+            
+            <!-- The Sun with point light -->
+            <a-entity light="type: point; intensity: 2">
+                <a-sphere 
+                    id="sun" 
+                    src="texture/2k_sun.jpg" 
+                    radius="4" 
+                    position="0 0 0" 
+                    material="emissive: #ffc259; emissiveIntensity: 0" 
+                    class="raycastable">
+                </a-sphere>
+                <a-text value="Sun" align="center" position="0 5 0" width="20" class="planet-label"></a-text>
+            </a-entity>
+
+            <!-- Mercury system -->
+            <a-entity id="mercury-system">
+                <a-entity id="mercury-orbit" rotation="0 0 0" rotator="speed: 150">
+                    <a-entity id="mercury-entity" position="6 0 0">
+                        <a-sphere 
+                            id="mercury" 
+                            src="texture/2k_mercury.jpg" 
+                            radius="0.38" 
+                            class="raycastable" 
+                            rotator="speed: 55">
+                        </a-sphere>
+                        <a-text value="Mercury" align="center" position="0 1 0" width="10" class="planet-label"></a-text>
+                    </a-entity>
+                </a-entity>
+                <a-torus color="#888" radius="6" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+            </a-entity>
+
+            <!-- Venus system -->
+            <a-entity id="venus-system">
+                <a-entity id="venus-orbit" rotation="0 0 0" rotator="speed: 100">
+                    <a-entity id="venus-entity" position="9 0 0">
+                        <a-sphere 
+                            id="venus" 
+                            src="texture/2k_venus_surface.jpg" 
+                            radius="0.95" 
+                            class="raycastable" 
+                            rotator="speed: 7">
+                        </a-sphere>
+                        <a-text value="Venus" align="center" position="0 2 0" width="15" class="planet-label"></a-text>
+                    </a-entity>
+                </a-entity>
+                <a-torus color="#888" radius="9" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+            </a-entity>
+
+            <!-- Earth & Moon system -->
+            <a-entity id="earth-system">
+                <a-entity id="earth-orbit" rotation="0 0 0" rotator="speed: 60">
+                    <a-entity id="earth-entity" position="12 0 0">
+                        <a-sphere 
+                            id="earth-night" 
+                            src="texture/2k_earth_normal_map.tif" 
+                            radius="0.99" 
+                            material="emissive: #FFFFFF; emissiveIntensity: 0.1" 
+                            class="raycastable" 
+                            rotator="speed: 65">
+                        </a-sphere>
+                        
+                        <a-sphere 
+                            id="earth-day" 
+                            src="texture/2k_earth_daymap.jpg" 
+                            radius="1" 
+                            material="transparent: true; opacity: 0.99" 
+                            class="raycastable" 
+                            rotator="speed: 65">
+                        </a-sphere>
+
+                        <a-sphere 
+                            id="atmosphere" 
+                            radius="1.05" 
+                            material="color: #03A9F4; transparent: true; opacity: 0.3; side: back">
+                        </a-sphere>
+
+                        <a-text value="Earth" align="center" position="0 2 0" width="15" class="planet-label"></a-text>
+                        
+                        <!-- Earth's Moon -->
+                        <a-entity 
+                            id="moon-orbit" 
+                            rotation="0 0 0" 
+                            rotator="speed: 280">
+                            <a-sphere 
+                                id="moon" 
+                                src="texture/2k_moon.jpg" 
+                                radius="0.27" 
+                                position="2 0 0" 
+                                class="raycastable"
+                                rotator="speed: 22">
+                            </a-sphere>
+                            <a-text value="Moon" align="center" position="2 0.5 0" width="8" class="planet-label"></a-text>
+                        </a-entity>
+                    </a-entity>
+                </a-entity>
+                <a-torus color="#888" radius="12" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+            </a-entity>
+
+            <!-- Mars system -->
+            <a-entity id="mars-system">
+                <a-entity id="mars-orbit" rotation="0 0 0" rotator="speed: 40">
+                    <a-entity id="mars-entity" position="15 0 0">
+                        <a-sphere 
+                            id="mars" 
+                            src="texture/2k_mars.jpg" 
+                            radius="0.53" 
+                            class="raycastable" 
+                            rotator="speed: 45">
+                        </a-sphere>
+                        <a-text value="Mars" align="center" position="0 1.5 0" width="15" class="planet-label"></a-text>
+                    </a-entity>
+                </a-entity>
+                <a-torus color="#888" radius="15" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+            </a-entity>
+
+            <!-- Jupiter system -->
+            <a-entity id="jupiter-system">
+                <a-entity id="jupiter-orbit" rotation="0 0 0" rotator="speed: 10">
+                    <a-entity id="jupiter-entity" position="20 0 0">
+                        <a-sphere 
+                            id="jupiter" 
+                            src="texture/2k_jupiter.jpg" 
+                            radius="2.5" 
+                            class="raycastable" 
+                            rotator="speed: 130">
+                        </a-sphere>
+                        <a-text value="Jupiter" align="center" position="0 4 0" width="20" class="planet-label"></a-text>
+                    </a-entity>
+                </a-entity>
+                <a-torus color="#888" radius="20" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+            </a-entity>
+
+            <!-- Saturn system -->
+            <a-entity id="saturn-system">
+                <a-entity id="saturn-orbit" rotation="0 0 0" rotator="speed: 3">
+                    <a-entity id="saturn-entity" position="26 0 0">
+                        <a-sphere 
+                            id="saturn" 
+                            src="texture/2k_saturn.jpg" 
+                            radius="2.2" 
+                            class="raycastable" 
+                            rotator="speed: 110">
+                            <a-ring 
+                                src="texture/2k_saturn_ring_alpha.png" 
+                                radius-inner="2.5" 
+                                radius-outer="4.5" 
+                                rotation="-90 0 0" 
+                                side="double" 
+                                transparent="true">
+                            </a-ring>
+                        </a-sphere>
+                        <a-text value="Saturn" align="center" position="0 4 0" width="20" class="planet-label"></a-text>
+                    </a-entity>
+                </a-entity>
+                <a-torus color="#888" radius="26" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+            </a-entity>
+
+            <!-- Uranus system -->
+            <a-entity id="uranus-system">
+                <a-entity id="uranus-orbit" rotation="0 0 0" rotator="speed: 1.5">
+                    <a-entity id="uranus-entity" position="32 0 0">
+                        <a-sphere 
+                            id="uranus" 
+                            src="texture/2k_uranus.jpg" 
+                            radius="1.5" 
+                            class="raycastable" 
+                            rotator="speed: 85">
+                        </a-sphere>
+                        <a-text value="Uranus" align="center" position="0 2.5 0" width="20" class="planet-label"></a-text>
+                    </a-entity>
+                </a-entity>
+                <a-torus color="#888" radius="32" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+            </a-entity>
+
+            <!-- Neptune system -->
+            <a-entity id="neptune-system">
+                <a-entity id="neptune-orbit" rotation="0 0 0" rotator="speed: 0.5">
+                    <a-entity id="neptune-entity" position="38 0 0">
+                        <a-sphere 
+                            id="neptune" 
+                            src="texture/2k_neptune.jpg" 
+                            radius="1.4" 
+                            class="raycastable" 
+                            rotator="speed: 90">
+                        </a-sphere>
+                        <a-text value="Neptune" align="center" position="0 2.5 0" width="20" class="planet-label"></a-text>
+                    </a-entity>
+                </a-entity>
+                <a-torus color="#888" radius="38" radius-tubular="0.01" rotation="90 0 0"></a-torus>
+            </a-entity>
+        </a-entity>
+    </a-scene>
+</body>
+</html>
